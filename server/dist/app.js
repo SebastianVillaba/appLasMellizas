@@ -1,6 +1,8 @@
 import express from 'express';
+import cors from 'cors';
 import routes from './routes.js';
 const app = express();
+app.use(cors({ origin: '*', methods: 'GET,HEAD,PUT,PATCH,POST,DELETE' }));
 app.use(express.json());
 // Health check
 app.get('/healthz', (req, res) => {

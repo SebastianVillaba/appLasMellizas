@@ -4,10 +4,14 @@ import { executeRequest, sql } from '../utils/dbHandler.js';
 const parsePrice = (priceString: string, splitIndex: number = 0): number => {
   try {
     // 1. Obtener la parte del precio (después de ':') o usar la cadena completa
-    let rawValue = priceString.includes(':') ? priceString.split(':')[splitIndex].trim() : priceString.trim();
+    // FIX: Usamos optional chaining (?.) y nullish coalescing (??) para evitar llamar .trim() en 'undefined'.
+    let rawValue = priceString.includes(':') 
+        ? (priceString.split(':')[splitIndex]?.trim() ?? '') 
+        : priceString.trim();
     
     // 2. Eliminar texto irrelevante y separadores de miles
-    rawValue = rawValue.replace(/Precio x Unidad:|A Partir de|Gs./g, '').replace(/\./g, '');
+    // Utilizamos un regex global para asegurar que eliminamos todas las ocurrencias
+    rawValue = rawValue.replace(/Precio x Unidad:|A Partir de|Gs\./g, '').replace(/\./g, '');
     
     // 3. Reemplazar coma por punto como separador decimal (si aplica)
     rawValue = rawValue.replace(',', '.');
@@ -19,7 +23,6 @@ const parsePrice = (priceString: string, splitIndex: number = 0): number => {
     return 0;
   }
 };
-
 export const getProductByBarcode = async (req: Request, res: Response) => {
   const { barcode } = req.params;
 
