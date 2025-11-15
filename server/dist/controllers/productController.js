@@ -34,24 +34,44 @@ export const getProductByBarcode = async (req, res) => {
         });
         if (result && result.recordset && result.recordset.length > 0) {
             const productData = result.recordset[0];
+            const safeGetString = (value) => (value != null ? String(value) : '');
+            const mercaderia = safeGetString(productData.mercaderia).replace('Mercadería:', '').trim();
+            const codigo = safeGetString(productData.codigo).replace('Codigo:', '').trim();
+            const precio1Raw = safeGetString(productData.precio1);
+            const precio2Raw = safeGetString(productData.precio2);
+            const parseAmount = (priceString, prefixToRemove) => {
+                const rawPrice = priceString.replace(prefixToRemove, '').trim();
+                const cleanedPrice = rawPrice.replace(/\./g, '').replace(',', '.');
+                const parsedAmount = parseFloat(cleanedPrice);
+                return isNaN(parsedAmount) ? 0 : parsedAmount;
+            };
+            const precio1Amount = parseAmount(precio1Raw, 'Precio x Unidad: Gs.');
+            let precio2Type = 'Cantidad'; // Default type if no promo
+            let precio2Amount = 0;
+            if (precio2Raw && precio2Raw !== '------') {
+                if (precio2Raw.startsWith('A Partir de')) {
+                    const parts = precio2Raw.split(':');
+                    precio2Type = safeGetString(parts[0]).trim();
+                    const rawPricePart = safeGetString(parts[1]);
+                    precio2Amount = parseAmount(rawPricePart, 'Gs.');
+                }
+                else {
+                    // Fallback if not 'A Partir de' but still a valid number string for some reason (e.g., just a price)
+                    precio2Amount = parseAmount(precio2Raw, 'Gs.');
+                }
+            }
             const formattedResult = {
-                name: productData.mercaderia.replace('Mercadería:', '').trim(),
+                name: mercaderia,
                 image: '/placeholder.png', // Placeholder image for now
                 prices: [
-                    {
-                        type: 'Precio x Unidad',
-                        // ANTES: amount: parseFloat(productData.precio1.replace('Precio x Unidad: Gs.', '').replace('.', '').replace(',', '.'))
-                        amount: parsePrice(productData.precio1) // AHORA usando la función robusta
-                    },
-                    {
-                        type: productData.precio2.startsWith('A Partir de') ? productData.precio2.split(':')[0].trim() : 'Cantidad',
-                        // ANTES: amount: parseFloat(productData.precio2.split(':')[1].replace('Gs.', '').replace('.', '').replace(',', '.')) 
-                        amount: parsePrice(productData.precio2, 1) // AHORA usando la función robusta
-                    }
+                    { type: 'Precio x Unidad', amount: precio1Amount },
                 ],
                 description: '', // The SP doesn't return a description field directly
-                codigo: productData.codigo.replace('Codigo:', '').trim(),
+                codigo: codigo,
             };
+            if (precio2Raw && precio2Raw !== '------') {
+                formattedResult.prices.push({ type: precio2Type, amount: precio2Amount });
+            }
             res.status(200).json(formattedResult);
         }
         else {
