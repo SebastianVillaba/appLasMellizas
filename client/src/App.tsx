@@ -16,7 +16,7 @@ function App() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const fetchProductByBarcode = async (barcode: string): Promise<Product> => {
-    const response = await fetch(`http://localhost:3000/api/product/${barcode}`);
+    const response = await fetch(`http://192.168.1.105:3000/api/product/${barcode}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
