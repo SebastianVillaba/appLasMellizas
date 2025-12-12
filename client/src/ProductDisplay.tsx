@@ -49,7 +49,7 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({ product }) => {
         <Typography variant="body1" sx={{ margin: 0, color: '#555' }}>Código: {product.codigo}</Typography>
         <Box sx={{ marginTop: '10px' }}>
           {product.prices.map((price, index) => (
-            <Typography key={index} variant="body1" sx={{ margin: '5px 0', color: '#007bff' }}>
+            <Typography key={index} variant="h4" sx={{ margin: '5px 0', color: '#007bff' }}>
               {price.type}: Gs. {price.amount.toLocaleString()}
             </Typography>
           ))}
